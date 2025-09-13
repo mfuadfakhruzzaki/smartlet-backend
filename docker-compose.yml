@@ -1,0 +1,162 @@
+version: "3.8"
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: swiflet-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: swiflet_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./migrations/001_create_tables.sql:/docker-entrypoint-initdb.d/001_create_tables.sql
+    networks:
+      - swiflet-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # TimescaleDB (extends PostgreSQL)
+  timescaledb:
+    image: timescale/timescaledb:latest-pg15
+    container_name: swiflet-timescaledb
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: swiflet_timeseries
+    ports:
+      - "5433:5432"
+    volumes:
+      - timescale_data:/var/lib/postgresql/data
+      - ./migrations/002_timescale_tables.sql:/docker-entrypoint-initdb.d/002_timescale_tables.sql
+    networks:
+      - swiflet-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # MQTT Broker (Eclipse Mosquitto)
+  mosquitto:
+    image: eclipse-mosquitto:2.0
+    container_name: swiflet-mqtt
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_logs:/mosquitto/log
+    networks:
+      - swiflet-network
+    restart: unless-stopped
+
+  # Redis (for caching - optional)
+  redis:
+    image: redis:7-alpine
+    container_name: swiflet-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - swiflet-network
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+
+  # Swiflet Backend API
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: swiflet-backend
+    environment:
+      # Database
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: password
+      DB_NAME: swiflet_db
+      DB_SSLMODE: disable
+
+      # TimescaleDB
+      TIMESCALE_HOST: timescaledb
+      TIMESCALE_PORT: 5432
+      TIMESCALE_USER: postgres
+      TIMESCALE_PASSWORD: password
+      TIMESCALE_DB: swiflet_timeseries
+      TIMESCALE_SSLMODE: disable
+
+      # JWT
+      JWT_SECRET: super-secret-jwt-key-for-development
+      JWT_EXPIRY: 24h
+
+      # Server
+      SERVER_PORT: 8080
+      SERVER_HOST: 0.0.0.0
+      GIN_MODE: debug
+
+      # MQTT
+      MQTT_BROKER: tcp://mosquitto:1883
+      MQTT_CLIENT_ID: swiflet-backend
+      MQTT_TOPIC_SENSOR: sensors/+/data
+      MQTT_TOPIC_CONTROL: control/+/command
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      timescaledb:
+        condition: service_healthy
+      mosquitto:
+        condition: service_started
+    networks:
+      - swiflet-network
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://localhost:8080/health",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # MQTT Client for testing (optional)
+  mqtt-client:
+    image: eclipse-mosquitto:2.0
+    container_name: swiflet-mqtt-client
+    depends_on:
+      - mosquitto
+    networks:
+      - swiflet-network
+    entrypoint: /bin/sh
+    tty: true
+    stdin_open: true
+    volumes:
+      - ./scripts:/scripts
+    profiles:
+      - testing
+
+volumes:
+  postgres_data:
+  timescale_data:
+  mosquitto_data:
+  mosquitto_logs:
+  redis_data:
+
+networks:
+  swiflet-network:
+    driver: bridge

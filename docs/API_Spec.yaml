@@ -1,0 +1,1411 @@
+openapi: 3.0.3
+info:
+  title: Swiflet Platform API
+  description: 'API spec disusun berdasarkan DDL yang diberikan. Seluruh nama schema
+    dan field mengikuti DDL **secara persis**.
+
+    '
+  version: 0.0.3
+servers:
+- url: https://api.example.com/v1
+security:
+- bearerAuth: []
+tags:
+- name: Auth
+- name: Users
+- name: Article & Tags & Comment
+- name: EBook & Video
+- name: WeeklyPrice & Harvest & HarvestSales
+- name: SwifletHouse & IoTDevice & Sensor
+- name: Requests
+- name: Transaction & Membership
+paths:
+  /auth/register:
+    post:
+      tags:
+      - Auth
+      summary: Register Users
+      description: Mendaftarkan user baru sesuai kolom tabel **Users**.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+        required: true
+      responses:
+        '201':
+          description: Registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_201'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+      security: []
+  /auth/login:
+    post:
+      tags:
+      - Auth
+      summary: Login
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/auth_login_body'
+        required: true
+      responses:
+        '200':
+          description: JWT issued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200'
+      security: []
+  /users:
+    get:
+      tags:
+      - Users
+      summary: List Users
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          minimum: 1
+          type: integer
+          default: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_1'
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - Users
+      summary: Create Users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Users'
+        required: true
+      responses:
+        '201':
+          description: Created
+      security:
+      - bearerAuth: []
+  /users/{id}:
+    get:
+      tags:
+      - Users
+      summary: Get Users by id
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Users'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+      - bearerAuth: []
+    delete:
+      tags:
+      - Users
+      summary: Delete Users
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '204':
+          description: Deleted
+      security:
+      - bearerAuth: []
+    patch:
+      tags:
+      - Users
+      summary: Update Users
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Users'
+        required: true
+      responses:
+        '200':
+          description: Updated
+      security:
+      - bearerAuth: []
+  /articles:
+    get:
+      tags:
+      - Article & Tags & Comment
+      summary: List Article
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          minimum: 1
+          type: integer
+          default: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_2'
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - Article & Tags & Comment
+      summary: Create Article
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Article'
+        required: true
+      responses:
+        '201':
+          description: Created
+      security:
+      - bearerAuth: []
+  /articles/{id}:
+    get:
+      tags:
+      - Article & Tags & Comment
+      summary: Get Article
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Article'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+      - bearerAuth: []
+    delete:
+      tags:
+      - Article & Tags & Comment
+      summary: Delete Article
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '204':
+          description: Deleted
+      security:
+      - bearerAuth: []
+    patch:
+      tags:
+      - Article & Tags & Comment
+      summary: Update Article
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Article'
+        required: true
+      responses:
+        '200':
+          description: Updated
+      security:
+      - bearerAuth: []
+  /tags:
+    get:
+      tags:
+      - Article & Tags & Comment
+      summary: List Tags
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tags'
+      security:
+      - bearerAuth: []
+      parameters:
+      - $ref: '#/components/parameters/PageParam'
+    post:
+      tags:
+      - Article & Tags & Comment
+      summary: Create Tags
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Tags'
+        required: true
+      responses:
+        '201':
+          description: Created
+      security:
+      - bearerAuth: []
+  /articles/{id}/comments:
+    get:
+      tags:
+      - Article & Tags & Comment
+      summary: List Comment for Article
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: page
+        in: query
+        required: false
+        schema:
+          minimum: 1
+          type: integer
+          default: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_3'
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - Article & Tags & Comment
+      summary: Create Comment for Article
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Comment'
+        required: true
+      responses:
+        '201':
+          description: Created
+      security:
+      - bearerAuth: []
+  /ebooks:
+    get:
+      tags:
+      - EBook & Video
+      summary: List EBook
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          minimum: 1
+          type: integer
+          default: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_4'
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - EBook & Video
+      summary: Create EBook
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EBook'
+        required: true
+      responses:
+        '201':
+          description: Created
+      security:
+      - bearerAuth: []
+  /videos:
+    get:
+      tags:
+      - EBook & Video
+      summary: List Video
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          minimum: 1
+          type: integer
+          default: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_5'
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - EBook & Video
+      summary: Create Video
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Video'
+        required: true
+      responses:
+        '201':
+          description: Created
+      security:
+      - bearerAuth: []
+  /weekly-prices:
+    get:
+      tags:
+      - WeeklyPrice & Harvest & HarvestSales
+      summary: List WeeklyPrice
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          minimum: 1
+          type: integer
+          default: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_6'
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - WeeklyPrice & Harvest & HarvestSales
+      summary: Create WeeklyPrice
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WeeklyPrice'
+        required: true
+      responses:
+        '201':
+          description: Created
+      security:
+      - bearerAuth: []
+  /harvests:
+    get:
+      tags:
+      - WeeklyPrice & Harvest & HarvestSales
+      summary: List Harvest
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          minimum: 1
+          type: integer
+          default: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_7'
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - WeeklyPrice & Harvest & HarvestSales
+      summary: Create Harvest
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Harvest'
+        required: true
+      responses:
+        '201':
+          description: Created
+      security:
+      - bearerAuth: []
+  /harvest-sales:
+    get:
+      tags:
+      - WeeklyPrice & Harvest & HarvestSales
+      summary: List HarvestSales
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          minimum: 1
+          type: integer
+          default: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_8'
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - WeeklyPrice & Harvest & HarvestSales
+      summary: Create HarvestSales
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HarvestSales'
+        required: true
+      responses:
+        '201':
+          description: Created
+      security:
+      - bearerAuth: []
+  /swiflet-houses:
+    get:
+      tags:
+      - SwifletHouse & IoTDevice & Sensor
+      summary: List SwifletHouse
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          minimum: 1
+          type: integer
+          default: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_9'
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - SwifletHouse & IoTDevice & Sensor
+      summary: Create SwifletHouse
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SwifletHouse'
+        required: true
+      responses:
+        '201':
+          description: Created
+      security:
+      - bearerAuth: []
+  /iot-devices:
+    get:
+      tags:
+      - SwifletHouse & IoTDevice & Sensor
+      summary: List IoTDevice
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          minimum: 1
+          type: integer
+          default: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_10'
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - SwifletHouse & IoTDevice & Sensor
+      summary: Create IoTDevice
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IoTDevice'
+        required: true
+      responses:
+        '201':
+          description: Created
+      security:
+      - bearerAuth: []
+  /sensors:
+    get:
+      tags:
+      - SwifletHouse & IoTDevice & Sensor
+      summary: List Sensor
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          minimum: 1
+          type: integer
+          default: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_11'
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - SwifletHouse & IoTDevice & Sensor
+      summary: Create Sensor
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Sensor'
+        required: true
+      responses:
+        '201':
+          description: Created
+      security:
+      - bearerAuth: []
+  /installation-requests:
+    get:
+      tags:
+      - Requests
+      summary: List InstallationRequest
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          minimum: 1
+          type: integer
+          default: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_12'
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - Requests
+      summary: Create InstallationRequest
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InstallationRequest'
+        required: true
+      responses:
+        '201':
+          description: Created
+      security:
+      - bearerAuth: []
+  /maintenance-requests:
+    get:
+      tags:
+      - Requests
+      summary: List MaintenanceRequest
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          minimum: 1
+          type: integer
+          default: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_13'
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - Requests
+      summary: Create MaintenanceRequest
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MaintenanceRequest'
+        required: true
+      responses:
+        '201':
+          description: Created
+      security:
+      - bearerAuth: []
+  /uninstallation-requests:
+    get:
+      tags:
+      - Requests
+      summary: List UninstallationRequest
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          minimum: 1
+          type: integer
+          default: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_14'
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - Requests
+      summary: Create UninstallationRequest
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UninstallationRequest'
+        required: true
+      responses:
+        '201':
+          description: Created
+      security:
+      - bearerAuth: []
+  /transactions:
+    get:
+      tags:
+      - Transaction & Membership
+      summary: List Transaction
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          minimum: 1
+          type: integer
+          default: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_15'
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - Transaction & Membership
+      summary: Create Transaction
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Transaction'
+        required: true
+      responses:
+        '201':
+          description: Created
+      security:
+      - bearerAuth: []
+  /memberships:
+    get:
+      tags:
+      - Transaction & Membership
+      summary: List Membership
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          minimum: 1
+          type: integer
+          default: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_16'
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - Transaction & Membership
+      summary: Create Membership
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Membership'
+        required: true
+      responses:
+        '201':
+          description: Created
+      security:
+      - bearerAuth: []
+components:
+  schemas:
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+    AuthToken:
+      type: string
+      description: JWT token hasil registrasi/login
+    RegisterRequest:
+      required:
+      - email
+      - name
+      - password
+      type: object
+      properties:
+        email:
+          type: string
+        name:
+          type: string
+        password:
+          type: string
+        location:
+          type: string
+        no_telp:
+          type: string
+        img_profile:
+          type: string
+        status:
+          type: integer
+          description: opsional; default di-backend 0=pending, 1=approved/active,
+            2=rejected/suspended
+          enum:
+          - 0
+          - 1
+          - 2
+        role:
+          type: integer
+          description: opsional; default di-backend
+    Users:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+        name:
+          type: string
+        location:
+          type: string
+        no_telp:
+          type: string
+        password:
+          type: string
+        img_profile:
+          type: string
+        status:
+          type: integer
+          enum:
+          - 0
+          - 1
+          - 2
+          description: 0=inactive, 1=active, 2=suspended
+        role:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+    Comment:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        article_id:
+          type: integer
+        user_id:
+          type: integer
+        content:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    Tags:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+    Article:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+        content:
+          type: string
+        cover_image:
+          type: string
+        tag_id:
+          type: integer
+        status:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    EBook:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+        file_path:
+          type: string
+        thumbnail_path:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    Video:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+        description:
+          type: string
+        youtube_link:
+          type: string
+        thumbnail_path:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    WeeklyPrice:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        province:
+          type: string
+        price:
+          type: number
+          format: float
+        week_start:
+          type: string
+          format: date
+        week_end:
+          type: string
+          format: date
+        created_at:
+          type: string
+          format: date-time
+    HarvestSales:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        id_user:
+          type: integer
+        province:
+          type: string
+        price:
+          type: number
+          format: float
+        bowl_weight:
+          type: number
+          format: float
+        oval_weight:
+          type: number
+          format: float
+        corner_weight:
+          type: number
+          format: float
+        broken_weight:
+          type: number
+          format: float
+        appointment_date:
+          type: string
+          format: date
+        proof_photo:
+          type: string
+        status:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    SwifletHouse:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        id_user:
+          type: integer
+        name:
+          type: string
+        location:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+    IoTDevice:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        id_swiflet_house:
+          type: integer
+        floor:
+          type: integer
+        install_code:
+          type: string
+        status:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    Sensor:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        install_code:
+          type: string
+        suhu:
+          type: number
+          format: float
+        kelembaban:
+          type: number
+          format: float
+        timestamp:
+          type: string
+          format: date-time
+    Harvest:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        id_user:
+          type: integer
+        id_swiflet_house:
+          type: integer
+        floor:
+          type: integer
+        bowl_weight:
+          type: number
+          format: float
+        bowl_pieces:
+          type: integer
+        oval_weight:
+          type: number
+          format: float
+        oval_pieces:
+          type: integer
+        corner_weight:
+          type: number
+          format: float
+        corner_pieces:
+          type: integer
+        broken_weight:
+          type: number
+          format: float
+        broken_pieces:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+    InstallationRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        id_swiflet_house:
+          type: integer
+        floors:
+          type: string
+        sensor_count:
+          type: integer
+        appointment_date:
+          type: string
+          format: date
+        status:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    MaintenanceRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        id_device:
+          type: integer
+        reason:
+          type: string
+        appointment_date:
+          type: string
+          format: date
+        status:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    UninstallationRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        id_device:
+          type: integer
+        reason:
+          type: string
+        appointment_date:
+          type: string
+          format: date
+        status:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        order_id:
+          type: string
+        status:
+          type: integer
+          enum:
+          - 0
+          - 1
+          - 2
+          description: 0=pending, 1=approved/active, 2=rejected/suspended
+        amount:
+          type: number
+          format: float
+        payment_type:
+          type: string
+        transaction_time:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    Membership:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        id_user:
+          type: integer
+        join_date:
+          type: string
+          format: date
+        exp_date:
+          type: string
+          format: date
+        order_id:
+          type: string
+        status:
+          type: integer
+    inline_response_201:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/Users'
+        token:
+          $ref: '#/components/schemas/AuthToken'
+    auth_login_body:
+      required:
+      - email
+      - password
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+    inline_response_200:
+      type: object
+      properties:
+        token:
+          $ref: '#/components/schemas/AuthToken'
+    inline_response_200_1:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Users'
+    inline_response_200_2:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Article'
+    inline_response_200_3:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Comment'
+    inline_response_200_4:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/EBook'
+    inline_response_200_5:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Video'
+    inline_response_200_6:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/WeeklyPrice'
+    inline_response_200_7:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Harvest'
+    inline_response_200_8:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/HarvestSales'
+    inline_response_200_9:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/SwifletHouse'
+    inline_response_200_10:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/IoTDevice'
+    inline_response_200_11:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Sensor'
+    inline_response_200_12:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/InstallationRequest'
+    inline_response_200_13:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/MaintenanceRequest'
+    inline_response_200_14:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/UninstallationRequest'
+    inline_response_200_15:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transaction'
+    inline_response_200_16:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Membership'
+  responses:
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    ValidationError:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  parameters:
+    Page:
+      name: page
+      in: query
+      required: false
+      schema:
+        minimum: 1
+        type: integer
+        default: 1
+    PerPage:
+      name: per_page
+      in: query
+      required: false
+      schema:
+        maximum: 100
+        minimum: 1
+        type: integer
+        default: 10
+    PageParam:
+      name: page
+      in: query
+      description: Page number (1-based).
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
