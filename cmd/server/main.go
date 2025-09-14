@@ -73,12 +73,30 @@ func setupRouter(cfg *config.Config, authHandler *handlers.AuthHandler, userHand
 	router.Use(middleware.CORSMiddleware())
 	router.Use(gin.Recovery())
 
-	// Health check endpoint
+	// Health check endpoint - handles both GET and HEAD requests
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"status":  "healthy",
 			"version": "0.0.3",
 		})
+	})
+	
+	router.HEAD("/health", func(c *gin.Context) {
+		c.Status(200)
+	})
+
+	// Root endpoint
+	router.GET("/", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"message": "Smartlet Backend API",
+			"version": "0.0.3",
+			"status":  "running",
+		})
+	})
+
+	// robots.txt endpoint
+	router.GET("/robots.txt", func(c *gin.Context) {
+		c.String(200, "User-agent: *\nDisallow: /")
 	})
 
 	// API v1 routes
