@@ -86,23 +86,27 @@ S3_REGION=us-east-1
 For easy development setup with MinIO (S3-compatible storage):
 
 **Windows:**
+
 ```cmd
 .\setup-dev.bat
 ```
 
 **Linux/Mac:**
+
 ```bash
 chmod +x setup-dev.sh
 ./setup-dev.sh
 ```
 
 This script will:
+
 - Copy `.env.example` to `.env`
 - Start MinIO container for S3 storage
 - Configure environment for local development
 - Setup ready for file upload testing
 
 After running the script:
+
 1. Open MinIO Console: http://localhost:9001
 2. Login with `minioadmin` / `minioadmin`
 3. Create bucket `swiflet-storage`
@@ -281,21 +285,23 @@ mosquitto_sub -t "sensors/+/data"
 If you get error: `"Failed to upload file: EmptyStaticCreds: static credentials are empty"` when testing upload endpoints:
 
 1. **Quick Fix - Use setup script:**
+
    ```bash
    # Windows
    .\setup-dev.bat
-   
-   # Linux/Mac  
+
+   # Linux/Mac
    ./setup-dev.sh
    ```
 
 2. **Manual Fix:**
+
    ```bash
    # Configure S3 credentials in .env
    S3_ACCESS_KEY=minioadmin
    S3_SECRET_KEY=minioadmin
    S3_ENDPOINT=http://localhost:9000
-   
+
    # Restart server
    go run cmd/server/main.go
    ```

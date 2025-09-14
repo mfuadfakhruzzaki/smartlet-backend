@@ -11,6 +11,7 @@ Endpoint: POST /v1/upload/profile
 ## ✅ Solusi Cepat
 
 ### Option 1: Automatic Setup (RECOMMENDED)
+
 ```bash
 # Windows
 .\setup-dev.bat
@@ -21,12 +22,15 @@ chmod +x setup-dev.sh
 ```
 
 ### Option 2: Manual Setup
+
 1. **Copy environment file:**
+
    ```bash
    cp .env.example .env
    ```
 
 2. **Configure MinIO in `.env`:**
+
    ```env
    S3_ACCESS_KEY=minioadmin
    S3_SECRET_KEY=minioadmin
@@ -36,11 +40,13 @@ chmod +x setup-dev.sh
    ```
 
 3. **Start MinIO:**
+
    ```bash
    docker run -d --name smartlet-minio -p 9000:9000 -p 9001:9001 minio/minio server /data --console-address ":9001"
    ```
 
 4. **Create bucket:**
+
    - Open: http://localhost:9001
    - Login: `minioadmin` / `minioadmin`
    - Create bucket: `swiflet-storage`
@@ -56,6 +62,7 @@ chmod +x setup-dev.sh
 Setelah konfigurasi S3, test endpoint berikut di Postman:
 
 ### 1. Upload Profile Image
+
 ```http
 POST {{base_url}}/v1/upload/profile
 Authorization: Bearer {{auth_token}}
@@ -67,6 +74,7 @@ Body: form-data
 ```
 
 ### 2. Upload Article Cover
+
 ```http
 POST {{base_url}}/v1/upload/article
 Authorization: Bearer {{auth_token}}
@@ -78,6 +86,7 @@ Body: form-data
 ```
 
 ### 3. Upload EBook File
+
 ```http
 POST {{base_url}}/v1/upload/ebook
 Authorization: Bearer {{auth_token}}
