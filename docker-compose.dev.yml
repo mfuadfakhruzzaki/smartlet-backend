@@ -11,12 +11,12 @@ services:
       dockerfile: Dockerfile.dev
     volumes:
       - .:/app
-      - /app/tmp  # Untuk air hot reload
+      - /app/tmp # Untuk air hot reload
     environment:
       - GIN_MODE=debug
       - HOT_RELOAD=true
     command: air
-    
+
   # Development database dengan port yang berbeda untuk akses lokal
   postgres:
     ports:
@@ -25,7 +25,7 @@ services:
       - POSTGRES_DB=swiflet_dev
     volumes:
       - postgres_dev_data:/var/lib/postgresql/data
-      
+
   timescaledb:
     ports:
       - "5433:5432"
