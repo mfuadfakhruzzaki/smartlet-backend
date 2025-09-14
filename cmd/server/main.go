@@ -157,13 +157,16 @@ func setupRouter(cfg *config.Config, authHandler *handlers.AuthHandler, userHand
 				tags.GET("/:id/articles", tagHandler.GetTagArticles)
 			}
 
-			// Comments routes
-			protected.GET("/articles/:article_id/comments", commentHandler.ListComments)
-			protected.POST("/articles/:article_id/comments", commentHandler.CreateComment)
-			protected.GET("/articles/:article_id/comments/:comment_id", commentHandler.GetComment)
-			protected.PATCH("/articles/:article_id/comments/:comment_id", commentHandler.UpdateComment)
-			protected.DELETE("/articles/:article_id/comments/:comment_id", commentHandler.DeleteComment)
-			protected.GET("/users/:user_id/comments", commentHandler.GetUserComments)
+			// Comments routes - moved to avoid conflicts
+			comments := protected.Group("/comments")
+			{
+				comments.GET("/article/:article_id", commentHandler.ListComments)
+				comments.POST("/article/:article_id", commentHandler.CreateComment)
+				comments.GET("/article/:article_id/:comment_id", commentHandler.GetComment)
+				comments.PATCH("/article/:article_id/:comment_id", commentHandler.UpdateComment)
+				comments.DELETE("/article/:article_id/:comment_id", commentHandler.DeleteComment)
+				comments.GET("/user/:user_id", commentHandler.GetUserComments)
+			}
 
 			// EBooks routes
 			ebooks := protected.Group("/ebooks")
