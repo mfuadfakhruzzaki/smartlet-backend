@@ -31,16 +31,40 @@ scripts\deploy-prod.bat
    # Edit .env.prod with your production values
    ```
 
-2. **Create MQTT authentication (if using Docker MQTT):**
+2. **Set secure MinIO credentials (IMPORTANT!):**
+
+   ```bash
+   # In .env.prod file, change these:
+   MINIO_ROOT_USER=your_secure_admin_user
+   MINIO_ROOT_PASSWORD=very_secure_password_at_least_8_chars
+
+   # Update S3 config accordingly:
+   S3_ACCESS_KEY=your_secure_admin_user
+   S3_SECRET_KEY=very_secure_password_at_least_8_chars
+   ```
+
+3. **Create MQTT authentication (if using Docker MQTT):**
 
    ```bash
    mkdir -p mosquitto_config
    docker run --rm eclipse-mosquitto:2.0 mosquitto_passwd -c -b /tmp/passwd your_mqtt_user your_mqtt_password > mosquitto_config/passwd
    ```
 
-3. **Deploy services:**
+4. **Deploy services:**
+
    ```bash
    docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+   ```
+
+5. **Initialize MinIO bucket:**
+
+   ```bash
+   # Linux/Mac
+   chmod +x scripts/init-minio.sh
+   docker exec -it swiflet-backend scripts/init-minio.sh
+
+   # Windows
+   scripts\init-minio.bat
    ```
 
 ### 🛠️ Development Setup

@@ -39,16 +39,17 @@ var (
 )
 
 func NewS3Service(cfg *config.Config) (*S3Service, error) {
-	// Create AWS session
+	// Create AWS session (compatible with MinIO)
 	awsConfig := &aws.Config{
 		Region:      aws.String(cfg.S3.Region),
 		Credentials: credentials.NewStaticCredentials(cfg.S3.AccessKey, cfg.S3.SecretKey, ""),
 	}
 	
-	// Only add endpoint if specified (for MinIO or other S3-compatible services)
+	// Configure for MinIO or other S3-compatible services
 	if cfg.S3.Endpoint != "" {
 		awsConfig.Endpoint = aws.String(cfg.S3.Endpoint)
 		awsConfig.S3ForcePathStyle = aws.Bool(true) // Required for MinIO
+		awsConfig.DisableSSL = aws.Bool(!strings.HasPrefix(cfg.S3.Endpoint, "https://")) // Auto-detect SSL
 	}
 
 	sess, err := session.NewSession(awsConfig)
@@ -56,12 +57,22 @@ func NewS3Service(cfg *config.Config) (*S3Service, error) {
 		return nil, fmt.Errorf("failed to create S3 session: %w", err)
 	}
 
-	return &S3Service{
+	service := &S3Service{
 		session:  sess,
 		uploader: s3manager.NewUploader(sess),
 		s3Client: s3.New(sess),
 		config:   cfg,
-	}, nil
+	}
+
+	// Create bucket if it doesn't exist (useful for MinIO)
+	// Skip bucket creation for production/external MinIO instances
+	if err := service.ensureBucketExists(); err != nil {
+		// Log warning but don't fail - bucket might already exist
+		fmt.Printf("Warning: Could not ensure bucket exists: %v\n", err)
+		fmt.Printf("Assuming bucket '%s' already exists and is accessible\n", cfg.S3.Bucket)
+	}
+
+	return service, nil
 }
 
 // UploadFile uploads a file to S3
@@ -222,4 +233,28 @@ func (s *S3Service) getMimeType(ext string) string {
 		return mimeType
 	}
 	return "application/octet-stream"
+}
+
+// ensureBucketExists creates the bucket if it doesn't exist (useful for MinIO)
+func (s *S3Service) ensureBucketExists() error {
+	// Check if bucket exists
+	_, err := s.s3Client.HeadBucket(&s3.HeadBucketInput{
+		Bucket: aws.String(s.config.S3.Bucket),
+	})
+	
+	if err == nil {
+		// Bucket exists
+		return nil
+	}
+	
+	// Bucket doesn't exist, create it
+	_, err = s.s3Client.CreateBucket(&s3.CreateBucketInput{
+		Bucket: aws.String(s.config.S3.Bucket),
+	})
+	
+	if err != nil {
+		return fmt.Errorf("failed to create bucket %s: %w", s.config.S3.Bucket, err)
+	}
+	
+	return nil
 }

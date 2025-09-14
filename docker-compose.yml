@@ -114,6 +114,13 @@ services:
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-}
       REDIS_DB: 0
+
+      # MinIO S3 Storage (External Self-Hosted)
+      S3_ENDPOINT: https://minio.fuadfakhruz.id
+      S3_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-3mto8a4dlhffxvja}
+      S3_BUCKET: ${S3_BUCKET:-swiftlead-storage}
+      S3_REGION: ${S3_REGION:-us-east-1}
     ports:
       - "8080:8080"
     depends_on:
