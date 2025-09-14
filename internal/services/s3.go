@@ -91,7 +91,7 @@ func (s *S3Service) UploadFile(file multipart.File, header *multipart.FileHeader
 		Key:         aws.String(filename),
 		Body:        file,
 		ContentType: aws.String(s.getMimeType(ext)),
-		ACL:         aws.String("public-read"), // Make files publicly accessible
+		// Remove ACL setting as bucket doesn't support public ACLs
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to upload file: %w", err)
