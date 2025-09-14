@@ -14,6 +14,7 @@ type Config struct {
 	JWT        JWTConfig
 	Server     ServerConfig
 	MQTT       MQTTConfig
+	Redis      RedisConfig
 	S3         S3Config
 }
 
@@ -53,6 +54,13 @@ type MQTTConfig struct {
 	Password     string
 	TopicSensor  string
 	TopicControl string
+}
+
+type RedisConfig struct {
+	Host     string
+	Port     int
+	Password string
+	DB       int
 }
 
 type S3Config struct {
@@ -100,6 +108,12 @@ func Load() (*Config, error) {
 			Password:     getEnv("MQTT_PASSWORD", ""),
 			TopicSensor:  getEnv("MQTT_TOPIC_SENSOR", "sensors/+/data"),
 			TopicControl: getEnv("MQTT_TOPIC_CONTROL", "control/+/command"),
+		},
+		Redis: RedisConfig{
+			Host:     getEnv("REDIS_HOST", "localhost"),
+			Port:     getEnvAsInt("REDIS_PORT", 6379),
+			Password: getEnv("REDIS_PASSWORD", ""),
+			DB:       getEnvAsInt("REDIS_DB", 0),
 		},
 		S3: S3Config{
 			Endpoint:  getEnv("S3_ENDPOINT", ""),

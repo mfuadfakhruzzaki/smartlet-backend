@@ -1,0 +1,48 @@
+version: "3.8"
+
+# Development override untuk Docker Compose
+# Jalankan dengan: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+services:
+  # Override backend untuk development dengan hot reload
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    volumes:
+      - .:/app
+      - /app/tmp  # Untuk air hot reload
+    environment:
+      - GIN_MODE=debug
+      - HOT_RELOAD=true
+    command: air
+    
+  # Development database dengan port yang berbeda untuk akses lokal
+  postgres:
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=swiflet_dev
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+      
+  timescaledb:
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_DB=swiflet_timeseries_dev
+    volumes:
+      - timescale_dev_data:/var/lib/postgresql/data
+
+  # Development MQTT dengan logging lebih verbose
+  mosquitto:
+    volumes:
+      - ./mosquitto.dev.conf:/mosquitto/config/mosquitto.conf
+      - mosquitto_dev_data:/mosquitto/data
+      - mosquitto_dev_logs:/mosquitto/log
+
+volumes:
+  postgres_dev_data:
+  timescale_dev_data:
+  mosquitto_dev_data:
+  mosquitto_dev_logs:
