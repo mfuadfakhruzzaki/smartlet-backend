@@ -89,3 +89,4 @@ tmp/
 build-errors.log
 Smartlet_Backend_API_Collection.postman_collection.json
 POSTMAN_COLLECTION_README.md
+.env.fixed
