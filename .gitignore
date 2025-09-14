@@ -74,5 +74,16 @@ tmp/
 # Local testing files
 test_data/
 *.test.json
-.env.example
 .env.local
+.env.prod
+.env.test
+
+# MQTT config with sensitive data
+mosquitto_config/passwd
+mosquitto_config/acl
+
+# Log files
+*.log
+logs/
+tmp/
+build-errors.log

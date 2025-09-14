@@ -32,14 +32,19 @@ func main() {
 	// Initialize MQTT service
 	mqttService, err := services.NewMQTTService(cfg, db)
 	if err != nil {
-		log.Fatalf("Failed to initialize MQTT service: %v", err)
+		log.Printf("Warning: Failed to initialize MQTT service: %v", err)
+		log.Println("Server will continue without MQTT functionality")
+		mqttService = nil
+	} else {
+		// Connect to MQTT broker with retry
+		if err := mqttService.ConnectWithRetry(5); err != nil {
+			log.Printf("Warning: Failed to connect to MQTT broker after retries: %v", err)
+			log.Println("Server will continue without MQTT functionality")
+			mqttService = nil
+		} else {
+			defer mqttService.Disconnect()
+		}
 	}
-
-	// Connect to MQTT broker
-	if err := mqttService.Connect(); err != nil {
-		log.Fatalf("Failed to connect to MQTT broker: %v", err)
-	}
-	defer mqttService.Disconnect()
 
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(db, cfg)

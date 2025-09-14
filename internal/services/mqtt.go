@@ -35,8 +35,16 @@ func NewMQTTService(cfg *config.Config, db *database.DB) (*MQTTService, error) {
 		opts.SetPassword(cfg.MQTT.Password)
 	}
 
+	// Production settings
 	opts.SetAutoReconnect(true)
 	opts.SetCleanSession(true)
+	opts.SetConnectTimeout(30 * time.Second)
+	opts.SetKeepAlive(60 * time.Second)
+	opts.SetPingTimeout(10 * time.Second)
+	opts.SetWriteTimeout(10 * time.Second)
+	opts.SetMaxReconnectInterval(10 * time.Minute)
+	opts.SetConnectRetryInterval(5 * time.Second)
+	opts.SetConnectRetry(true)
 
 	service := &MQTTService{
 		config: cfg,
@@ -45,13 +53,18 @@ func NewMQTTService(cfg *config.Config, db *database.DB) (*MQTTService, error) {
 
 	// Set connection lost handler
 	opts.SetConnectionLostHandler(func(client mqtt.Client, err error) {
-		log.Printf("MQTT connection lost: %v", err)
+		log.Printf("MQTT connection lost: %v. Will attempt to reconnect...", err)
 	})
 
 	// Set on connect handler
 	opts.SetOnConnectHandler(func(client mqtt.Client) {
-		log.Println("MQTT connected")
+		log.Println("MQTT connected successfully")
 		service.subscribe()
+	})
+
+	// Set reconnect handler
+	opts.SetReconnectingHandler(func(client mqtt.Client, opts *mqtt.ClientOptions) {
+		log.Println("MQTT attempting to reconnect...")
 	})
 
 	client := mqtt.NewClient(opts)
@@ -60,12 +73,42 @@ func NewMQTTService(cfg *config.Config, db *database.DB) (*MQTTService, error) {
 	return service, nil
 }
 
-// Connect to MQTT broker
+// Connect to MQTT broker with retry logic
 func (s *MQTTService) Connect() error {
+	log.Println("Attempting to connect to MQTT broker...")
+	
 	if token := s.client.Connect(); token.Wait() && token.Error() != nil {
 		return fmt.Errorf("failed to connect to MQTT broker: %w", token.Error())
 	}
+	
+	log.Println("MQTT broker connection established")
 	return nil
+}
+
+// ConnectWithRetry attempts to connect with exponential backoff
+func (s *MQTTService) ConnectWithRetry(maxRetries int) error {
+	var lastErr error
+	backoff := 1 * time.Second
+	
+	for i := 0; i < maxRetries; i++ {
+		if err := s.Connect(); err != nil {
+			lastErr = err
+			log.Printf("MQTT connection attempt %d/%d failed: %v", i+1, maxRetries, err)
+			
+			if i < maxRetries-1 {
+				log.Printf("Retrying in %v...", backoff)
+				time.Sleep(backoff)
+				backoff *= 2
+				if backoff > 30*time.Second {
+					backoff = 30 * time.Second
+				}
+			}
+			continue
+		}
+		return nil
+	}
+	
+	return fmt.Errorf("failed to connect to MQTT after %d attempts: %w", maxRetries, lastErr)
 }
 
 // Disconnect from MQTT broker
