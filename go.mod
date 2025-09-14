@@ -1,8 +1,6 @@
 module swiflet-backend
 
-go 1.24.0
-
-toolchain go1.24.5
+go 1.21
 
 require (
 	github.com/eclipse/paho.mqtt.golang v1.5.0
