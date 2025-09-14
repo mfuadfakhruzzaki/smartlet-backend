@@ -119,7 +119,7 @@ func Load() (*Config, error) {
 			Endpoint:  getEnv("S3_ENDPOINT", ""),
 			AccessKey: getEnv("S3_ACCESS_KEY", ""),
 			SecretKey: getEnv("S3_SECRET_KEY", ""),
-			Bucket:    getEnv("S3_BUCKET", "swiflet-storage"),
+			Bucket:    getEnv("S3_BUCKET", "swiftlead-storage"),
 			Region:    getEnv("S3_REGION", "us-east-1"),
 		},
 	}

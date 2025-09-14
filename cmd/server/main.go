@@ -46,14 +46,24 @@ func main() {
 		}
 	}
 
+	// Initialize S3 service
+	s3Service, err := services.NewS3Service(cfg)
+	if err != nil {
+		log.Fatal("Failed to create S3 service:", err)
+	}
+
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(db, cfg)
 	userHandler := handlers.NewUserHandler(db)
 	articleHandler := handlers.NewArticleHandler(db)
 	iotHandler := handlers.NewIoTHandler(db)
+	tagHandler := handlers.NewTagHandler(db)
+	commentHandler := handlers.NewCommentHandler(db)
+	ebookHandler := handlers.NewEBookHandler(db)
+	uploadHandler := handlers.NewUploadHandler(db, s3Service)
 
 	// Setup router
-	router := setupRouter(cfg, authHandler, userHandler, articleHandler, iotHandler)
+	router := setupRouter(cfg, authHandler, userHandler, articleHandler, iotHandler, tagHandler, commentHandler, ebookHandler, uploadHandler)
 
 	// Start server
 	serverAddr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
@@ -65,7 +75,8 @@ func main() {
 }
 
 func setupRouter(cfg *config.Config, authHandler *handlers.AuthHandler, userHandler *handlers.UserHandler, 
-	articleHandler *handlers.ArticleHandler, iotHandler *handlers.IoTHandler) *gin.Engine {
+	articleHandler *handlers.ArticleHandler, iotHandler *handlers.IoTHandler, tagHandler *handlers.TagHandler, 
+	commentHandler *handlers.CommentHandler, ebookHandler *handlers.EBookHandler, uploadHandler *handlers.UploadHandler) *gin.Engine {
 	router := gin.New()
 
 	// Add middleware
@@ -135,34 +146,42 @@ func setupRouter(cfg *config.Config, authHandler *handlers.AuthHandler, userHand
 				articles.DELETE("/:id", articleHandler.DeleteArticle)
 			}
 
-			// Tags routes (placeholder)
+			// Tags routes
 			tags := protected.Group("/tags")
 			{
-				tags.GET("", func(c *gin.Context) {
-					c.JSON(200, gin.H{"data": []interface{}{}})
-				})
-				tags.POST("", func(c *gin.Context) {
-					c.JSON(201, gin.H{"message": "Tag created"})
-				})
+				tags.GET("", tagHandler.ListTags)
+				tags.POST("", tagHandler.CreateTag)
+				tags.GET("/:id", tagHandler.GetTag)
+				tags.PATCH("/:id", tagHandler.UpdateTag)
+				tags.DELETE("/:id", tagHandler.DeleteTag)
+				tags.GET("/:id/articles", tagHandler.GetTagArticles)
 			}
 
-			// Comments routes (placeholder)
-			protected.GET("/articles/:id/comments", func(c *gin.Context) {
-				c.JSON(200, gin.H{"data": []interface{}{}})
-			})
-			protected.POST("/articles/:id/comments", func(c *gin.Context) {
-				c.JSON(201, gin.H{"message": "Comment created"})
-			})
+			// Comments routes
+			protected.GET("/articles/:article_id/comments", commentHandler.ListComments)
+			protected.POST("/articles/:article_id/comments", commentHandler.CreateComment)
+			protected.GET("/articles/:article_id/comments/:comment_id", commentHandler.GetComment)
+			protected.PATCH("/articles/:article_id/comments/:comment_id", commentHandler.UpdateComment)
+			protected.DELETE("/articles/:article_id/comments/:comment_id", commentHandler.DeleteComment)
+			protected.GET("/users/:user_id/comments", commentHandler.GetUserComments)
 
-			// EBooks routes (placeholder)
+			// EBooks routes
 			ebooks := protected.Group("/ebooks")
 			{
-				ebooks.GET("", func(c *gin.Context) {
-					c.JSON(200, gin.H{"data": []interface{}{}})
-				})
-				ebooks.POST("", func(c *gin.Context) {
-					c.JSON(201, gin.H{"message": "EBook created"})
-				})
+				ebooks.GET("", ebookHandler.ListEBooks)
+				ebooks.POST("", ebookHandler.CreateEBook)
+				ebooks.GET("/:id", ebookHandler.GetEBook)
+				ebooks.PATCH("/:id", ebookHandler.UpdateEBook)
+				ebooks.DELETE("/:id", ebookHandler.DeleteEBook)
+				ebooks.GET("/:id/download", ebookHandler.DownloadEBook)
+			}
+
+			// Upload routes
+			uploads := protected.Group("/upload")
+			{
+				uploads.POST("/profile", uploadHandler.UploadUserProfile)
+				uploads.POST("/article", uploadHandler.UploadArticleCover)
+				uploads.POST("/ebook", uploadHandler.UploadEBookFile)
 			}
 
 			// Videos routes (placeholder)
