@@ -73,7 +73,40 @@ JWT_EXPIRY=24h
 
 # MQTT
 MQTT_BROKER=tcp://localhost:1883
+
+# S3 Storage (Required for file upload)
+S3_ACCESS_KEY=your-s3-access-key
+S3_SECRET_KEY=your-s3-secret-key
+S3_BUCKET=your-bucket-name
+S3_REGION=us-east-1
 ```
+
+### Quick Development Setup
+
+For easy development setup with MinIO (S3-compatible storage):
+
+**Windows:**
+```cmd
+.\setup-dev.bat
+```
+
+**Linux/Mac:**
+```bash
+chmod +x setup-dev.sh
+./setup-dev.sh
+```
+
+This script will:
+- Copy `.env.example` to `.env`
+- Start MinIO container for S3 storage
+- Configure environment for local development
+- Setup ready for file upload testing
+
+After running the script:
+1. Open MinIO Console: http://localhost:9001
+2. Login with `minioadmin` / `minioadmin`
+3. Create bucket `swiflet-storage`
+4. Set bucket policy to public read access
 
 ### Database Setup
 
@@ -240,6 +273,47 @@ Monitor MQTT traffic for IoT sensor data:
 ```bash
 mosquitto_sub -t "sensors/+/data"
 ```
+
+## 🔧 Troubleshooting
+
+### S3 Upload Error: "EmptyStaticCreds"
+
+If you get error: `"Failed to upload file: EmptyStaticCreds: static credentials are empty"` when testing upload endpoints:
+
+1. **Quick Fix - Use setup script:**
+   ```bash
+   # Windows
+   .\setup-dev.bat
+   
+   # Linux/Mac  
+   ./setup-dev.sh
+   ```
+
+2. **Manual Fix:**
+   ```bash
+   # Configure S3 credentials in .env
+   S3_ACCESS_KEY=minioadmin
+   S3_SECRET_KEY=minioadmin
+   S3_ENDPOINT=http://localhost:9000
+   
+   # Restart server
+   go run cmd/server/main.go
+   ```
+
+3. **Create MinIO bucket:**
+   - Open http://localhost:9001
+   - Login: minioadmin/minioadmin
+   - Create bucket: `swiflet-storage`
+   - Set policy: Public read access
+
+📖 **Detailed guide**: See `S3_UPLOAD_CONFIGURATION.md`
+
+### Common Issues
+
+- **Database connection failed**: Check PostgreSQL is running and credentials in `.env`
+- **MQTT broker unavailable**: Check Mosquitto is running on port 1883
+- **JWT token invalid**: Check `JWT_SECRET` in `.env` matches between requests
+- **Permission denied**: Check file upload permissions and S3 bucket policy
 
 ## 🔧 Configuration
 
