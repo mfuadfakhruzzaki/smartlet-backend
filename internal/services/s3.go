@@ -39,9 +39,15 @@ var (
 )
 
 func NewS3Service(cfg *config.Config) (*S3Service, error) {
+	// For MinIO, use default region if not specified
+	region := cfg.S3.Region
+	if region == "" {
+		region = "us-east-1" // Default for MinIO
+	}
+
 	// Create AWS session (compatible with MinIO)
 	awsConfig := &aws.Config{
-		Region:      aws.String(cfg.S3.Region),
+		Region:      aws.String(region),
 		Credentials: credentials.NewStaticCredentials(cfg.S3.AccessKey, cfg.S3.SecretKey, ""),
 	}
 	
@@ -64,13 +70,10 @@ func NewS3Service(cfg *config.Config) (*S3Service, error) {
 		config:   cfg,
 	}
 
-	// Create bucket if it doesn't exist (useful for MinIO)
-	// Skip bucket creation for production/external MinIO instances
-	if err := service.ensureBucketExists(); err != nil {
-		// Log warning but don't fail - bucket might already exist
-		fmt.Printf("Warning: Could not ensure bucket exists: %v\n", err)
-		fmt.Printf("Assuming bucket '%s' already exists and is accessible\n", cfg.S3.Bucket)
-	}
+	// For MinIO, skip bucket creation check to avoid API port issues
+	// Assume bucket exists and is accessible
+	fmt.Printf("Using MinIO endpoint: %s\n", cfg.S3.Endpoint)
+	fmt.Printf("Using bucket: %s\n", cfg.S3.Bucket)
 
 	return service, nil
 }
@@ -257,4 +260,65 @@ func (s *S3Service) ensureBucketExists() error {
 	}
 	
 	return nil
+}
+
+// ListObjects lists all objects in the bucket
+func (s *S3Service) ListObjects(prefix string) ([]*s3.Object, error) {
+	input := &s3.ListObjectsV2Input{
+		Bucket: aws.String(s.config.S3.Bucket),
+	}
+	
+	if prefix != "" {
+		input.Prefix = aws.String(prefix)
+	}
+
+	result, err := s.s3Client.ListObjectsV2(input)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list objects: %w", err)
+	}
+
+	return result.Contents, nil
+}
+
+// SetBucketPolicyPublicRead sets bucket policy to allow public read access
+func (s *S3Service) SetBucketPolicyPublicRead() error {
+	bucketPolicy := fmt.Sprintf(`{
+		"Version": "2012-10-17",
+		"Statement": [
+			{
+				"Effect": "Allow",
+				"Principal": "*",
+				"Action": ["s3:GetObject"],
+				"Resource": ["arn:aws:s3:::%s/*"]
+			}
+		]
+	}`, s.config.S3.Bucket)
+
+	_, err := s.s3Client.PutBucketPolicy(&s3.PutBucketPolicyInput{
+		Bucket: aws.String(s.config.S3.Bucket),
+		Policy: aws.String(bucketPolicy),
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to set bucket policy: %w", err)
+	}
+
+	return nil
+}
+
+// GetBucketPolicy gets current bucket policy
+func (s *S3Service) GetBucketPolicy() (string, error) {
+	result, err := s.s3Client.GetBucketPolicy(&s3.GetBucketPolicyInput{
+		Bucket: aws.String(s.config.S3.Bucket),
+	})
+
+	if err != nil {
+		return "", fmt.Errorf("failed to get bucket policy: %w", err)
+	}
+
+	if result.Policy == nil {
+		return "", fmt.Errorf("no policy set")
+	}
+
+	return *result.Policy, nil
 }
